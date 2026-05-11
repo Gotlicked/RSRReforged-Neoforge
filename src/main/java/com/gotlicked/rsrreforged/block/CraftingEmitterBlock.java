@@ -29,12 +29,14 @@ import org.jspecify.annotations.NonNull;
 public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlock {
 
     private static final VoxelShape SHAPE = box(0, 0, 0, 16, 5, 16);
-    @SuppressWarnings("unchecked")
-    private static final AbstractBlockEntityTicker<CraftingEmitterBlockEntity> TICKER = new NetworkNodeBlockEntityTicker<>(
-            () -> (BlockEntityType<CraftingEmitterBlockEntity>) RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get(),
-            null
-    );
     public static BooleanProperty POWERED = BooleanProperty.create("powered");
+
+    private static BlockEntityType<CraftingEmitterBlockEntity> craftingEmitterType() {
+        return RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get();
+    }
+
+    private static final AbstractBlockEntityTicker<CraftingEmitterBlockEntity> TICKER =
+            new NetworkNodeBlockEntityTicker<>(CraftingEmitterBlock::craftingEmitterType, null);
 
     public CraftingEmitterBlock() {
         super(Properties.ofFullCopy(Blocks.IRON_BLOCK).setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("rsrreforged", "crafting_emitter"))));
@@ -47,7 +49,7 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
         builder.add(POWERED);
     }
 
-    public BlockEntityType.BlockEntitySupplier<?> getTileEntityFactory() {
+    public BlockEntityType.BlockEntitySupplier<CraftingEmitterBlockEntity> getTypedFactory() {
         return (blockPos, blockState) -> new CraftingEmitterBlockEntity(RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get(), blockPos, blockState);
     }
 
@@ -58,7 +60,7 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
 
     @Nullable
     public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
-        return this.getTileEntityFactory().create(pos, state);
+        return getTypedFactory().create(pos, state);
     }
 
     @Override

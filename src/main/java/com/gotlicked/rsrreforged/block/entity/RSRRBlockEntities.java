@@ -16,12 +16,15 @@ public class RSRRBlockEntities {
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             RSRReforged.MOD_ID);
 
-    @SuppressWarnings("unchecked")
-    public static DeferredHolder<BlockEntityType<?>, ? extends BlockEntityType<? extends RequesterBlockEntity>> REQUESTER_BE_TYPE = BLOCK_ENTITY_TYPES.register("requester", () -> new BlockEntityType<>((
-            BlockEntityType.BlockEntitySupplier<? extends RequesterBlockEntity>) ((RequesterBlock) RSRRBlocks.REQUESTER.get()).getTileEntityFactory(), RSRRBlocks.REQUESTER.get()));
-    @SuppressWarnings("unchecked")
-    public static DeferredHolder<BlockEntityType<?>, ? extends BlockEntityType<? extends CraftingEmitterBlockEntity>> CRAFTING_EMITTER_BE_TYPE = BLOCK_ENTITY_TYPES.register("crafting_emitter", () -> new BlockEntityType<>((
-            BlockEntityType.BlockEntitySupplier<? extends CraftingEmitterBlockEntity>) ((CraftingEmitterBlock) RSRRBlocks.CRAFTING_EMITTER.get()).getTileEntityFactory(), RSRRBlocks.CRAFTING_EMITTER.get()));
+    public static DeferredHolder<BlockEntityType<?>, BlockEntityType<RequesterBlockEntity>> REQUESTER_BE_TYPE =
+            BLOCK_ENTITY_TYPES.register("requester", () -> new BlockEntityType<>(
+                    ((RequesterBlock) RSRRBlocks.REQUESTER.get()).getTypedFactory(),
+                    RSRRBlocks.REQUESTER.get()));
+
+    public static DeferredHolder<BlockEntityType<?>, BlockEntityType<CraftingEmitterBlockEntity>> CRAFTING_EMITTER_BE_TYPE =
+            BLOCK_ENTITY_TYPES.register("crafting_emitter", () -> new BlockEntityType<>(
+                    ((CraftingEmitterBlock) RSRRBlocks.CRAFTING_EMITTER.get()).getTypedFactory(),
+                    RSRRBlocks.CRAFTING_EMITTER.get()));
 
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITY_TYPES.register(eventBus);

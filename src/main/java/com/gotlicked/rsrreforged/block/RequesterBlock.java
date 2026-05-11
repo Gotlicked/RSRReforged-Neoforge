@@ -25,11 +25,13 @@ import org.jspecify.annotations.NonNull;
 public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
 
     public static BooleanProperty CONNECTED = BooleanProperty.create("connected");
-    @SuppressWarnings("unchecked")
-    private static final AbstractBlockEntityTicker<RequesterBlockEntity> TICKER = new NetworkNodeBlockEntityTicker<>(
-            () -> (BlockEntityType<RequesterBlockEntity>) RSRRBlockEntities.REQUESTER_BE_TYPE.get(),
-            CONNECTED
-    );
+
+    private static BlockEntityType<RequesterBlockEntity> requesterType() {
+        return RSRRBlockEntities.REQUESTER_BE_TYPE.get();
+    }
+
+    private static final AbstractBlockEntityTicker<RequesterBlockEntity> TICKER =
+            new NetworkNodeBlockEntityTicker<>(RequesterBlock::requesterType, CONNECTED);
 
     public RequesterBlock() {
         super(Properties.ofFullCopy(Blocks.IRON_BLOCK).setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("rsrreforged", "requester"))));
@@ -42,7 +44,7 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
         builder.add(CONNECTED);
     }
 
-    public BlockEntityType.BlockEntitySupplier<?> getTileEntityFactory() {
+    public BlockEntityType.BlockEntitySupplier<RequesterBlockEntity> getTypedFactory() {
         return (blockPos, blockState) -> new RequesterBlockEntity(RSRRBlockEntities.REQUESTER_BE_TYPE.get(), blockPos, blockState);
     }
 
@@ -53,7 +55,7 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
 
     @Nullable
     public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
-        return this.getTileEntityFactory().create(pos, state);
+        return getTypedFactory().create(pos, state);
     }
 
 }
