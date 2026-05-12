@@ -12,14 +12,13 @@ public class RequesterScreen extends AbstractFilterScreen<RequesterContainer> {
         super(menu, playerInventory, title, true);
     }
 
-    @Override
-    protected void init() {
+    @Override protected void init() {
         super.init();
     }
 
-    @Override
-    protected void extractTooltip(final @NonNull GuiGraphicsExtractor graphics, final int x, final int y) {
-        if (renderExportingIndicators(font, graphics, leftPos, topPos, x, y, getMenu().getIndicators(),
+    @Override protected void extractTooltip(final @NonNull GuiGraphicsExtractor graphics, final int x, final int y) {
+        if(renderExportingIndicators(
+                font, graphics, leftPos, topPos, x, y, getMenu().getIndicators(),
                 getMenu()::getIndicator)) {
             return;
         }

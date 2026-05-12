@@ -34,30 +34,35 @@ public class CraftingEmitterNetworkNode extends SimpleNetworkNode {
         this.shouldEmmitRedstone = shouldEmmitRedstone;
     }
 
-    @Override
-    public void doWork() {
+    @Override public void doWork() {
         super.doWork();
-        if (network != null && isActive() && this.filter != null && this.level != null && this.level.getGameTime() % 20 == 0) {
-            var craftingComponent = network.getComponent(AutocraftingNetworkComponent.class);
-            for (int i = 0; i < this.filter.getFilterContainer().size(); i++) {
+        if(network != null && isActive() && this.filter != null && this.level != null
+           && this.level.getGameTime() % 20 == 0) {
+            var craftingComponent = network.getComponent(
+                    AutocraftingNetworkComponent.class);
+            for(
+                    int i = 0; i < this.filter.getFilterContainer().size(); i++) {
                 try {
                     var resource = this.filter.getFilterContainer().get(i);
-                    if (resource == null) {
+                    if(resource == null) {
                         results[i] = InterfaceTransferResult.EXPORTED;
                         continue;
                     }
-                    var patterns = craftingComponent.getPatternsByOutput(resource.resource());
-                    for (var pattern : patterns) {
+                    var patterns = craftingComponent.getPatternsByOutput(
+                            resource.resource());
+                    for(var pattern : patterns) {
                         var patterProvider = craftingComponent.getProviderByPattern(pattern);
                         assert patterProvider != null;
-                        for (TaskStatus taskStatus : patterProvider.getTaskStatuses()) {
-                            if (taskStatus.info().resource().equals(resource.resource()) && taskStatus.info().amount() >= resource.amount()) {
+                        for(TaskStatus taskStatus : patterProvider.getTaskStatuses()) {
+                            if(taskStatus.info().resource().equals(resource.resource())
+                               && taskStatus.info().amount() >= resource.amount()) {
                                 this.shouldEmmitRedstone.accept(true);
                                 return;
                             }
                         }
                     }
-                } catch (IllegalStateException e) {
+                }
+                catch(IllegalStateException e) {
                     results[i] = InterfaceTransferResult.RESOURCE_MISSING;
                 }
             }
@@ -65,14 +70,12 @@ public class CraftingEmitterNetworkNode extends SimpleNetworkNode {
         }
     }
 
-    @Override
-    protected void onActiveChanged(boolean newActive) {
+    @Override protected void onActiveChanged(boolean newActive) {
         super.onActiveChanged(newActive);
     }
 
-    @Nullable
-    public InterfaceTransferResult getLastResult(final int slot) {
-        if (results == null) {
+    @Nullable public InterfaceTransferResult getLastResult(final int slot) {
+        if(results == null) {
             return null;
         }
         return results[slot];

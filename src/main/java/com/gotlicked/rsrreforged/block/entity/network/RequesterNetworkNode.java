@@ -36,47 +36,54 @@ public class RequesterNetworkNode extends SimpleNetworkNode {
         this.upgradeContainer = upgradeContainer;
     }
 
-    @Override
-    public void doWork() {
+    @Override public void doWork() {
         super.doWork();
-        if (network != null && isActive() && this.filter != null && this.level != null && this.level.getGameTime() % 10 == 0) {
-            var craftingComponent = network.getComponent(AutocraftingNetworkComponent.class);
-            var storageComponent = network.getComponent(StorageNetworkComponent.class);
-            for (int i = 0; i < this.filter.getFilterContainer().size(); i++) {
+        if(network != null && isActive() && this.filter != null && this.level != null
+           && this.level.getGameTime() % 10 == 0) {
+            var craftingComponent = network.getComponent(
+                    AutocraftingNetworkComponent.class);
+            var storageComponent = network.getComponent(
+                    StorageNetworkComponent.class);
+            for(
+                    int i = 0; i < this.filter.getFilterContainer().size(); i++) {
                 try {
                     var resource = this.filter.getFilterContainer().get(i);
-                    if (resource == null) {
+                    if(resource == null) {
                         results[i] = InterfaceTransferResult.EXPORTED;
                         continue;
                     }
                     var amount = resource.amount();
                     var needed = amount - storageComponent.get(resource.resource());
-                    if (needed <= 0) {
+                    if(needed <= 0) {
                         results[i] = InterfaceTransferResult.EXPORTED;
                         continue;
                     }
-                    var toRequestMaxAmount = 64 * (1 + 8 * this.upgradeContainer.getAmount(Items.INSTANCE.getStackUpgrade()));
-                    AutocraftingNetworkComponent.EnsureResult ensure = craftingComponent.ensureTask(resource.resource(), Math.min(needed, toRequestMaxAmount), () -> "Requester", new TimeoutableCancellationToken());
-                    if (ensure == AutocraftingNetworkComponent.EnsureResult.TASK_CREATED || ensure == AutocraftingNetworkComponent.EnsureResult.TASK_ALREADY_RUNNING) {
+                    var toRequestMaxAmount = 64 * (
+                            1 + 8 * this.upgradeContainer.getAmount(Items.INSTANCE.getStackUpgrade()));
+                    AutocraftingNetworkComponent.EnsureResult ensure = craftingComponent.ensureTask(
+                            resource.resource(), Math.min(needed, toRequestMaxAmount), () -> "Requester",
+                            new TimeoutableCancellationToken());
+                    if(ensure == AutocraftingNetworkComponent.EnsureResult.TASK_CREATED
+                       || ensure == AutocraftingNetworkComponent.EnsureResult.TASK_ALREADY_RUNNING) {
                         results[i] = InterfaceTransferResult.AUTOCRAFTING_STARTED;
-                    } else if (ensure == AutocraftingNetworkComponent.EnsureResult.MISSING_RESOURCES) {
+                    }
+                    else if(ensure == AutocraftingNetworkComponent.EnsureResult.MISSING_RESOURCES) {
                         results[i] = InterfaceTransferResult.AUTOCRAFTING_MISSING_RESOURCES;
                     }
-                } catch (IllegalStateException e) {
+                }
+                catch(IllegalStateException e) {
                     results[i] = InterfaceTransferResult.RESOURCE_MISSING;
                 }
             }
         }
     }
 
-    @Override
-    protected void onActiveChanged(boolean newActive) {
+    @Override protected void onActiveChanged(boolean newActive) {
         super.onActiveChanged(newActive);
     }
 
-    @Nullable
-    public InterfaceTransferResult getLastResult(final int slot) {
-        if (results == null) {
+    @Nullable public InterfaceTransferResult getLastResult(final int slot) {
+        if(results == null) {
             return null;
         }
         return results[slot];

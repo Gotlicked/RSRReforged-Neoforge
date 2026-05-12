@@ -9,18 +9,14 @@ import java.util.function.Supplier;
 
 public class RSRRBlocks {
 
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.createBlocks(
-            RSRReforged.MOD_ID
-    );
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.createBlocks(RSRReforged.MOD_ID);
 
     public static final Supplier<Block> REQUESTER = BLOCKS.register(
             "requester",
-            RequesterBlock::new
-    );
+            RequesterBlock::new);
     public static final Supplier<Block> CRAFTING_EMITTER = BLOCKS.register(
             "crafting_emitter",
-            CraftingEmitterBlock::new
-    );
+            CraftingEmitterBlock::new);
 
     public static void register(IEventBus eventBus) {
         BLOCKS.register(eventBus);

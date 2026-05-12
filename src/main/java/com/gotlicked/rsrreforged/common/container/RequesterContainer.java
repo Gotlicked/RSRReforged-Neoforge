@@ -28,41 +28,51 @@ public class RequesterContainer extends AbstractResourceContainerMenu implements
     private final ExportingIndicators indicators;
     private final Predicate<Player> stillValid;
 
-    public RequesterContainer(final int syncId,
-                              final Player player,
-                              final RequesterBlockEntity blockEntity,
-                              final ResourceContainer exportConfig,
-                              final UpgradeContainer upgradeContainer,
-                              final ExportingIndicators indicators) {
+    public RequesterContainer(
+            final int syncId, final Player player, final RequesterBlockEntity blockEntity,
+            final ResourceContainer exportConfig, final UpgradeContainer upgradeContainer,
+            final ExportingIndicators indicators) {
         super(RSRRMenus.REQUESTER_MENU.get(), syncId, player);
         addSlots(player, exportConfig, upgradeContainer);
-        registerProperty(new ServerProperty<>(
+        registerProperty(
+                new ServerProperty<>(
                 PropertyTypes.REDSTONE_MODE,
                 blockEntity::getRedstoneMode,
-                blockEntity::setRedstoneMode
-        ));
+                blockEntity::setRedstoneMode));
         this.indicators = indicators;
         this.stillValid = p -> Container.stillValidBlockEntity(blockEntity, p);
     }
 
-    public RequesterContainer(final int syncId,
-                              final Inventory playerInventory,
-                              final RequesterData interfaceData) {
+    public RequesterContainer(final int syncId, final Inventory playerInventory, final RequesterData interfaceData) {
         super(RSRRMenus.REQUESTER_MENU.get(), syncId);
         final ResourceContainer filterContainer = RequesterBlockEntity.createFilterContainer(interfaceData);
-        addSlots(playerInventory.player, filterContainer, new UpgradeContainer(RequesterBlockEntity.REQUESTER_DESTINATION, 4));
-        registerProperty(new ClientProperty<>(PropertyTypes.FUZZY_MODE, false));
-        registerProperty(new ClientProperty<>(PropertyTypes.REDSTONE_MODE, RedstoneMode.IGNORE));
+        addSlots(
+                playerInventory.player, filterContainer,
+                new UpgradeContainer(
+                        RequesterBlockEntity.REQUESTER_DESTINATION,
+                        4));
+        registerProperty(
+                new ClientProperty<>(
+                        PropertyTypes.FUZZY_MODE,
+                        false));
+        registerProperty(
+                new ClientProperty<>(
+                        PropertyTypes.REDSTONE_MODE,
+                        RedstoneMode.IGNORE));
         this.indicators = new ExportingIndicators(interfaceData.exportingIndicators());
         this.stillValid = _ -> true;
     }
 
     private static int getExportSlotX(final int index) {
-        return EXPORT_CONFIG_SLOT_X + (18 * index);
+        return EXPORT_CONFIG_SLOT_X + (
+                18 * index);
     }
 
-    private void addSlots(final Player player, final ResourceContainer exportConfig, final UpgradeContainer upgradeContainer) {
-        for (int i = 0; i < exportConfig.size(); ++i) {
+    private void addSlots(
+            final Player player, final ResourceContainer exportConfig,
+            final UpgradeContainer upgradeContainer) {
+        for(
+                int i = 0; i < exportConfig.size(); ++i) {
             addSlot(createExportConfigSlot(exportConfig, i));
         }
         addSlot(new UpgradeSlot(upgradeContainer, 0, 187, 6));
@@ -73,19 +83,12 @@ public class RequesterContainer extends AbstractResourceContainerMenu implements
         transferManager.addFilterTransfer(player.getInventory());
     }
 
-    private Slot createExportConfigSlot(
-            final ResourceContainer exportConfig,
-            final int index
-    ) {
+    private Slot createExportConfigSlot(final ResourceContainer exportConfig, final int index) {
         final int x = getExportSlotX(index);
         return new ResourceSlot(
-                exportConfig,
-                index,
-                Component.translatable("block.rsrreforged.requester.tooltip.filter"),
-                x,
-                EXPORT_CONFIG_SLOT_Y,
-                ResourceSlotType.FILTER_WITH_AMOUNT
-        );
+                exportConfig, index, Component.translatable(
+                        "block.rsrreforged.requester.tooltip.filter"), x,
+                EXPORT_CONFIG_SLOT_Y, ResourceSlotType.FILTER_WITH_AMOUNT);
     }
 
     public ExportingIndicator getIndicator(final int idx) {
@@ -96,21 +99,18 @@ public class RequesterContainer extends AbstractResourceContainerMenu implements
         return indicators.size();
     }
 
-    @Override
-    public void broadcastChanges() {
+    @Override public void broadcastChanges() {
         super.broadcastChanges();
-        if (player instanceof ServerPlayer serverPlayer) {
+        if(player instanceof ServerPlayer serverPlayer) {
             indicators.detectChanges(serverPlayer);
         }
     }
 
-    @Override
-    public boolean stillValid(final @NonNull Player player) {
+    @Override public boolean stillValid(final @NonNull Player player) {
         return stillValid.test(player);
     }
 
-    @Override
-    public void indicatorChanged(final int index, final @NonNull ExportingIndicator indicator) {
+    @Override public void indicatorChanged(final int index, final @NonNull ExportingIndicator indicator) {
         indicators.set(index, indicator);
     }
 }

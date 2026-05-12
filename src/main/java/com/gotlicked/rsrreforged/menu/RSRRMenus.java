@@ -15,16 +15,28 @@ import java.util.function.Supplier;
 
 public class RSRRMenus {
 
-    public static final DeferredRegister<MenuType<?>> MENUS =
-            DeferredRegister.create(Registries.MENU, RSRReforged.MOD_ID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(
+            Registries.MENU,
+            RSRReforged.MOD_ID);
 
-    public static final Supplier<MenuType<RequesterContainer>> REQUESTER_MENU =
-            MENUS.register("requester_menu", () -> IMenuTypeExtension.create((i, inventory, registryFriendlyByteBuf) -> new RequesterContainer(
-                    i, inventory, RequesterData.STREAM_CODEC.decode(registryFriendlyByteBuf))));
+    public static final Supplier<MenuType<RequesterContainer>> REQUESTER_MENU = MENUS.register(
+            "requester_menu",
+            () -> IMenuTypeExtension.create(
+                    (i, inventory,
+                     registryFriendlyByteBuf)
+                            -> new RequesterContainer(
+                            i, inventory,
+                            RequesterData.STREAM_CODEC.decode(
+                                    registryFriendlyByteBuf))));
 
-    public static final Supplier<MenuType<CraftingEmitterContainer>> CRAFTING_EMITTER_MENU =
-            MENUS.register("crafting_emitter_menu", () -> IMenuTypeExtension.create((i, inventory, registryFriendlyByteBuf) -> new CraftingEmitterContainer(
-                    i, inventory, CraftingEmitterData.STREAM_CODEC.decode(registryFriendlyByteBuf))));
+    public static final Supplier<MenuType<CraftingEmitterContainer>> CRAFTING_EMITTER_MENU = MENUS.register(
+            "crafting_emitter_menu",
+            () -> IMenuTypeExtension.create(
+                    (i, inventory, registryFriendlyByteBuf)
+                            -> new CraftingEmitterContainer(
+                            i, inventory,
+                            CraftingEmitterData.STREAM_CODEC.decode(
+                                    registryFriendlyByteBuf))));
 
     public static void register(IEventBus eventBus) {
         MENUS.register(eventBus);

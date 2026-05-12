@@ -11,12 +11,14 @@ import java.util.List;
 
 import static com.refinedmods.refinedstorage.common.util.PlatformUtil.enumStreamCodec;
 
-public record CraftingEmitterData(ResourceContainerData filterContainerData,
-                                  List<ExportingIndicator> exportingIndicators) {
+public record CraftingEmitterData(
+        ResourceContainerData filterContainerData, List<ExportingIndicator> exportingIndicators) {
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingEmitterData> STREAM_CODEC = StreamCodec.composite(
-            ResourceContainerData.STREAM_CODEC, CraftingEmitterData::filterContainerData,
-            ByteBufCodecs.collection(ArrayList::new, enumStreamCodec(ExportingIndicator.values())),
+            ResourceContainerData.STREAM_CODEC,
+            CraftingEmitterData::filterContainerData,
+            ByteBufCodecs.collection(
+                    ArrayList::new,
+                    enumStreamCodec(ExportingIndicator.values())),
             CraftingEmitterData::exportingIndicators,
-            CraftingEmitterData::new
-    );
+            CraftingEmitterData::new);
 }

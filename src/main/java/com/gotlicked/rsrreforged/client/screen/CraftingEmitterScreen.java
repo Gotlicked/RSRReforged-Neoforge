@@ -8,18 +8,18 @@ import net.minecraft.world.entity.player.Inventory;
 import org.jspecify.annotations.NonNull;
 
 public class CraftingEmitterScreen extends AbstractFilterScreen<CraftingEmitterContainer> {
-    public CraftingEmitterScreen(final CraftingEmitterContainer menu, final Inventory playerInventory, final Component title) {
+    public CraftingEmitterScreen(final CraftingEmitterContainer menu, final Inventory playerInventory,
+                                 final Component title) {
         super(menu, playerInventory, title, false);
     }
 
-    @Override
-    protected void init() {
+    @Override protected void init() {
         super.init();
     }
 
-    @Override
-    protected void extractTooltip(final @NonNull GuiGraphicsExtractor graphics, final int x, final int y) {
-        if (renderExportingIndicators(font, graphics, leftPos, topPos, x, y, getMenu().getIndicators(),
+    @Override protected void extractTooltip(final @NonNull GuiGraphicsExtractor graphics, final int x, final int y) {
+        if(renderExportingIndicators(
+                font, graphics, leftPos, topPos, x, y, getMenu().getIndicators(),
                 getMenu()::getIndicator)) {
             return;
         }

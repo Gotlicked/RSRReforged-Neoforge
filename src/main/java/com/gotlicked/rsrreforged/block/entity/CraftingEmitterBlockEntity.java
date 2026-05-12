@@ -32,7 +32,8 @@ import org.jspecify.annotations.NonNull;
 
 import javax.annotation.Nullable;
 
-public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainerBlockEntity<CraftingEmitterNetworkNode> implements NetworkNodeExtendedMenuProvider<CraftingEmitterData> {
+public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainerBlockEntity<CraftingEmitterNetworkNode>
+        implements NetworkNodeExtendedMenuProvider<CraftingEmitterData> {
 
     private static final int EXPORT_SLOTS = 9;
 
@@ -40,8 +41,10 @@ public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainer
     private boolean shouldEmmitRedstone;
 
     public CraftingEmitterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, new CraftingEmitterNetworkNode(16));
-        this.filter = FilterWithFuzzyMode.create(createFilterContainer(), this::setChanged);
+        super(type, pos, state,
+              new CraftingEmitterNetworkNode(16));
+        this.filter = FilterWithFuzzyMode.create(
+                createFilterContainer(), this::setChanged);
         this.shouldEmmitRedstone = false;
         this.mainNetworkNode.setFilter(this.filter);
         this.mainNetworkNode.setShouldEmmitRedstone(this::updatePower);
@@ -49,61 +52,69 @@ public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainer
 
     public static ResourceContainer createFilterContainer() {
         return new ResourceContainerImpl(
-                EXPORT_SLOTS,
-                _ -> Integer.MAX_VALUE,
+                EXPORT_SLOTS, _ -> Integer.MAX_VALUE,
                 RefinedStorageApi.INSTANCE.getItemResourceFactory(),
-                RefinedStorageApi.INSTANCE.getAlternativeResourceFactories()
-        );
+                RefinedStorageApi.INSTANCE.getAlternativeResourceFactories());
     }
 
     public static ResourceContainer createFilterContainer(final CraftingEmitterData interfaceData) {
         final ResourceContainer filterContainer = createFilterContainer();
         final ResourceContainerData resourceContainerData = interfaceData.filterContainerData();
-        for (int i = 0; i < resourceContainerData.resources().size(); ++i) {
+        for(
+                int i = 0; i < resourceContainerData.resources().size(); ++i) {
             final int ii = i;
-            resourceContainerData.resources().get(i).ifPresent(resource -> filterContainer.set(ii, resource));
+            resourceContainerData.resources().get(i).ifPresent(
+                    resource -> filterContainer.set(
+                    ii, resource));
         }
         return filterContainer;
     }
 
-    @Override
-    public void setLevel(@NonNull Level level) {
+    @Override public void setLevel(@NonNull Level level) {
         super.setLevel(level);
         this.mainNetworkNode.setLevel(level);
     }
 
     public void updatePower(boolean powered) {
-        if (this.shouldEmmitRedstone != powered) {
+        if(this.shouldEmmitRedstone != powered) {
             this.shouldEmmitRedstone = powered;
             assert this.level != null;
-            this.level.setBlockAndUpdate(this.worldPosition, this.getBlockState().setValue(CraftingEmitterBlock.POWERED, powered));
+            this.level.setBlockAndUpdate(
+                    this.worldPosition,
+                    this.getBlockState().setValue(
+                            CraftingEmitterBlock.POWERED, powered));
         }
     }
 
-    @Nullable
-    @Override
-    public AbstractContainerMenu createMenu(final int syncId, final @NonNull Inventory inventory, final @NonNull Player player) {
-        return new CraftingEmitterContainer(syncId, player, this, filter.getFilterContainer(), getExportingIndicators());
+    @Nullable @Override public AbstractContainerMenu createMenu(
+            final int syncId, final @NonNull Inventory inventory,
+            final @NonNull Player player) {
+        return new CraftingEmitterContainer(
+                syncId, player, this, filter.getFilterContainer(), getExportingIndicators());
     }
 
 
-    @Override
-    public @NonNull CraftingEmitterData getMenuData() {
-        return new CraftingEmitterData(ResourceContainerData.of(filter.getFilterContainer()), getExportingIndicators().getAll());
+    @Override public @NonNull CraftingEmitterData getMenuData() {
+        return new CraftingEmitterData(
+                ResourceContainerData.of(
+                        filter.getFilterContainer()),
+                getExportingIndicators().getAll());
     }
 
-    @Override
-    public @NonNull StreamEncoder<RegistryFriendlyByteBuf, CraftingEmitterData> getMenuCodec() {
+    @Override public @NonNull StreamEncoder<RegistryFriendlyByteBuf, CraftingEmitterData> getMenuCodec() {
         return CraftingEmitterData.STREAM_CODEC;
     }
 
 
     private ExportingIndicators getExportingIndicators() {
-        return new ExportingIndicators(filter.getFilterContainer(), i -> toExportingIndicator(mainNetworkNode.getLastResult(i)), true);
+        return new ExportingIndicators(
+                filter.getFilterContainer(), i -> toExportingIndicator(
+                        mainNetworkNode.getLastResult(i)), true);
     }
 
-    private ExportingIndicator toExportingIndicator(@Nullable final InterfaceTransferResult result) {
-        return switch (result) {
+    private ExportingIndicator toExportingIndicator(
+            @Nullable final InterfaceTransferResult result) {
+        return switch(result) {
             case STORAGE_DOES_NOT_ACCEPT_RESOURCE -> ExportingIndicator.DESTINATION_DOES_NOT_ACCEPT_RESOURCE;
             case RESOURCE_MISSING -> ExportingIndicator.RESOURCE_MISSING;
             case AUTOCRAFTING_STARTED -> ExportingIndicator.AUTOCRAFTING_WAS_STARTED;
@@ -112,41 +123,35 @@ public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainer
         };
     }
 
-    @Override
-    public @NonNull Component getName() {
+    @Override public @NonNull Component getName() {
         return Component.translatable("block.rsrreforged.crafting_emitter");
     }
 
-    @Override
-    public boolean hasCustomName() {
+    @Override public boolean hasCustomName() {
         return false;
     }
 
-    @Override
-    protected @NonNull InWorldNetworkNodeContainer createMainContainer(@NonNull CraftingEmitterNetworkNode networkNode) {
-        return RefinedStorageApi.INSTANCE.createNetworkNodeContainer(this, networkNode)
-                .connectionStrategy(new SimpleConnectionStrategy(getBlockPos()))
-                .build();
+    @Override protected @NonNull InWorldNetworkNodeContainer createMainContainer(
+            @NonNull CraftingEmitterNetworkNode networkNode) {
+        return RefinedStorageApi.INSTANCE.createNetworkNodeContainer(
+                this, networkNode).connectionStrategy(
+                new SimpleConnectionStrategy(getBlockPos())).build();
     }
 
-    @Override
-    public void saveAdditional(final @NonNull ValueOutput output) {
+    @Override public void saveAdditional(final @NonNull ValueOutput output) {
         super.saveAdditional(output);
     }
 
-    @Override
-    public void loadAdditional(final @NonNull ValueInput input) {
+    @Override public void loadAdditional(final @NonNull ValueInput input) {
         super.loadAdditional(input);
     }
 
-    @Override
-    public void writeConfiguration(final @NonNull ValueOutput output) {
+    @Override public void writeConfiguration(final @NonNull ValueOutput output) {
         super.writeConfiguration(output);
         filter.store(output);
     }
 
-    @Override
-    public void readConfiguration(final @NonNull ValueInput input) {
+    @Override public void readConfiguration(final @NonNull ValueInput input) {
         super.readConfiguration(input);
         filter.read(input);
     }

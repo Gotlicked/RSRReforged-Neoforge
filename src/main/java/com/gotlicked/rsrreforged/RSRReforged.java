@@ -20,8 +20,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
-@Mod(RSRReforged.MOD_ID)
-public class RSRReforged {
+@Mod(RSRReforged.MOD_ID) public class RSRReforged {
     public static final String MOD_ID = "rsrreforged";
     public static final Logger LOGGER = LogUtils.getLogger();
 
@@ -38,30 +37,35 @@ public class RSRReforged {
 
     private void commonSetup(FMLCommonSetupEvent event) {
 
-        RefinedStorageApi.INSTANCE.getUpgradeRegistry().forDestination(RequesterBlockEntity.REQUESTER_DESTINATION).add(Items.INSTANCE.getStackUpgrade(), 4);
+        RefinedStorageApi.INSTANCE.getUpgradeRegistry().forDestination(
+                RequesterBlockEntity.REQUESTER_DESTINATION).add(
+                Items.INSTANCE.getStackUpgrade(), 4);
 
         LOGGER.info("FMLCommonSetupEvent");
     }
 
     public void registerCapabilitiesEvent(RegisterCapabilitiesEvent event) {
-        event.registerBlock(RefinedStorageNeoForgeApi.INSTANCE.getNetworkNodeContainerProviderCapability(), (_, _, _, blockEntity, _) -> {
-            if (blockEntity instanceof RequesterBlockEntity requesterBlockEntity) {
-                return requesterBlockEntity.getContainerProvider();
-            }
-            return null;
-        }, RSRRBlocks.REQUESTER.get());
-        event.registerBlock(RefinedStorageNeoForgeApi.INSTANCE.getNetworkNodeContainerProviderCapability(), (_, _, _, blockEntity, _) -> {
-            if (blockEntity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
-                return craftingEmitterBlockEntity.getContainerProvider();
-            }
-            return null;
-        }, RSRRBlocks.CRAFTING_EMITTER.get());
+        event.registerBlock(
+                RefinedStorageNeoForgeApi.INSTANCE.getNetworkNodeContainerProviderCapability(),
+                (_, _, _, blockEntity, _) -> {
+                    if(blockEntity instanceof RequesterBlockEntity requesterBlockEntity) {
+                        return requesterBlockEntity.getContainerProvider();
+                    }
+                    return null;
+                }, RSRRBlocks.REQUESTER.get());
+        event.registerBlock(
+                RefinedStorageNeoForgeApi.INSTANCE.getNetworkNodeContainerProviderCapability(),
+                (_, _, _, blockEntity, _) -> {
+                    if(blockEntity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
+                        return craftingEmitterBlockEntity.getContainerProvider();
+                    }
+                    return null;
+                }, RSRRBlocks.CRAFTING_EMITTER.get());
 
         LOGGER.info("RegisterCapabilitiesEvent");
     }
 
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
+    @SubscribeEvent public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("ServerStartingEvent");
     }
 }
