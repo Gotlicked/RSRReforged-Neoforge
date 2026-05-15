@@ -1,14 +1,15 @@
-package com.gotlicked.rsrreforged.common.container;
+package com.gotlicked.rsrreforged.container;
 
-import com.gotlicked.rsrreforged.block.entity.CraftingEmitterBlockEntity;
-import com.gotlicked.rsrreforged.common.data.CraftingEmitterData;
-import com.gotlicked.rsrreforged.menu.RSRRMenus;
+import com.gotlicked.rsrreforged.RSRReforged;
+import com.gotlicked.rsrreforged.block.entity.RequesterBlockEntity;
 import com.refinedmods.refinedstorage.common.api.support.resource.ResourceContainer;
 import com.refinedmods.refinedstorage.common.support.RedstoneMode;
 import com.refinedmods.refinedstorage.common.support.containermenu.*;
 import com.refinedmods.refinedstorage.common.support.exportingindicator.ExportingIndicator;
 import com.refinedmods.refinedstorage.common.support.exportingindicator.ExportingIndicatorListener;
 import com.refinedmods.refinedstorage.common.support.exportingindicator.ExportingIndicators;
+import com.refinedmods.refinedstorage.common.upgrade.UpgradeContainer;
+import com.refinedmods.refinedstorage.common.upgrade.UpgradeSlot;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -19,32 +20,40 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.function.Predicate;
 
-public class CraftingEmitterContainer extends AbstractResourceContainerMenu implements ExportingIndicatorListener {
+public class RequesterContainer extends AbstractResourceContainerMenu implements ExportingIndicatorListener {
     private static final int EXPORT_CONFIG_SLOT_X = 8;
     private static final int EXPORT_CONFIG_SLOT_Y = 20;
 
     private final ExportingIndicators indicators;
     private final Predicate<Player> stillValid;
 
-    public CraftingEmitterContainer(
-            final int syncId, final Player player, final CraftingEmitterBlockEntity blockEntity,
-            final ResourceContainer exportConfig, final ExportingIndicators indicators) {
-        super(RSRRMenus.CRAFTING_EMITTER_MENU.get(), syncId, player);
-        addSlots(player, exportConfig);
+    public RequesterContainer(
+            final int syncId, final Player player, final RequesterBlockEntity blockEntity,
+            final ResourceContainer exportConfig, final UpgradeContainer upgradeContainer,
+            final ExportingIndicators indicators) {
+        super(RSRReforged.RSRRMenus.REQUESTER_MENU.get(), syncId, player);
+        addSlots(player, exportConfig, upgradeContainer);
         registerProperty(
                 new ServerProperty<>(
-                PropertyTypes.REDSTONE_MODE, blockEntity::getRedstoneMode,
-                blockEntity::setRedstoneMode));
+                        PropertyTypes.REDSTONE_MODE,
+                        blockEntity::getRedstoneMode,
+                        blockEntity::setRedstoneMode));
         this.indicators = indicators;
         this.stillValid = p -> Container.stillValidBlockEntity(blockEntity, p);
     }
 
-    public CraftingEmitterContainer(
-            final int syncId, final Inventory playerInventory,
-            final CraftingEmitterData interfaceData) {
-        super(RSRRMenus.CRAFTING_EMITTER_MENU.get(), syncId);
-        final ResourceContainer filterContainer = CraftingEmitterBlockEntity.createFilterContainer(interfaceData);
-        addSlots(playerInventory.player, filterContainer);
+    public RequesterContainer(final int syncId, final Inventory playerInventory, final RequesterBlockEntity.RequesterData interfaceData) {
+        super(RSRReforged.RSRRMenus.REQUESTER_MENU.get(), syncId);
+        final ResourceContainer filterContainer = RequesterBlockEntity.createFilterContainer(interfaceData);
+        addSlots(
+                playerInventory.player, filterContainer,
+                new UpgradeContainer(
+                        RequesterBlockEntity.REQUESTER_DESTINATION,
+                        4));
+        registerProperty(
+                new ClientProperty<>(
+                        PropertyTypes.FUZZY_MODE,
+                        false));
         registerProperty(
                 new ClientProperty<>(
                         PropertyTypes.REDSTONE_MODE,
@@ -53,17 +62,22 @@ public class CraftingEmitterContainer extends AbstractResourceContainerMenu impl
         this.stillValid = _ -> true;
     }
 
-
     private static int getExportSlotX(final int index) {
         return EXPORT_CONFIG_SLOT_X + (
                 18 * index);
     }
 
-    private void addSlots(final Player player, final ResourceContainer exportConfig) {
-        for(
+    private void addSlots(
+            final Player player, final ResourceContainer exportConfig,
+            final UpgradeContainer upgradeContainer) {
+        for (
                 int i = 0; i < exportConfig.size(); ++i) {
             addSlot(createExportConfigSlot(exportConfig, i));
         }
+        addSlot(new UpgradeSlot(upgradeContainer, 0, 187, 6));
+        addSlot(new UpgradeSlot(upgradeContainer, 1, 187, 6 + 18));
+        addSlot(new UpgradeSlot(upgradeContainer, 2, 187, 6 + 18 * 2));
+        addSlot(new UpgradeSlot(upgradeContainer, 3, 187, 6 + 18 * 3));
         addPlayerInventory(player.getInventory(), 8, 55);
         transferManager.addFilterTransfer(player.getInventory());
     }
@@ -72,7 +86,7 @@ public class CraftingEmitterContainer extends AbstractResourceContainerMenu impl
         final int x = getExportSlotX(index);
         return new ResourceSlot(
                 exportConfig, index, Component.translatable(
-                        "block.rsrreforged.crafting_emitter.tooltip.filter"), x,
+                "block.rsrreforged.requester.tooltip.filter"), x,
                 EXPORT_CONFIG_SLOT_Y, ResourceSlotType.FILTER_WITH_AMOUNT);
     }
 
@@ -84,18 +98,21 @@ public class CraftingEmitterContainer extends AbstractResourceContainerMenu impl
         return indicators.size();
     }
 
-    @Override public void broadcastChanges() {
+    @Override
+    public void broadcastChanges() {
         super.broadcastChanges();
-        if(player instanceof ServerPlayer serverPlayer) {
+        if (player instanceof ServerPlayer serverPlayer) {
             indicators.detectChanges(serverPlayer);
         }
     }
 
-    @Override public boolean stillValid(final @NonNull Player player) {
+    @Override
+    public boolean stillValid(final @NonNull Player player) {
         return stillValid.test(player);
     }
 
-    @Override public void indicatorChanged(final int index, final @NonNull ExportingIndicator indicator) {
+    @Override
+    public void indicatorChanged(final int index, final @NonNull ExportingIndicator indicator) {
         indicators.set(index, indicator);
     }
 }

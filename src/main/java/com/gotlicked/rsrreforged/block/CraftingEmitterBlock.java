@@ -1,7 +1,7 @@
 package com.gotlicked.rsrreforged.block;
 
+import com.gotlicked.rsrreforged.RSRReforged;
 import com.gotlicked.rsrreforged.block.entity.CraftingEmitterBlockEntity;
-import com.gotlicked.rsrreforged.block.entity.RSRRBlockEntities;
 import com.refinedmods.refinedstorage.common.support.AbstractBaseBlock;
 import com.refinedmods.refinedstorage.common.support.AbstractBlockEntityTicker;
 import com.refinedmods.refinedstorage.common.support.network.NetworkNodeBlockEntityTicker;
@@ -28,11 +28,11 @@ import org.jspecify.annotations.NonNull;
 
 public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlock {
 
+    public static final BooleanProperty POWERED = BooleanProperty.create("powered");
     private static final VoxelShape SHAPE = box(0, 0, 0, 16, 5, 16);
     private static final AbstractBlockEntityTicker<CraftingEmitterBlockEntity> TICKER =
             new NetworkNodeBlockEntityTicker<>(
                     CraftingEmitterBlock::craftingEmitterType, null);
-    public static BooleanProperty POWERED = BooleanProperty.create("powered");
 
     public CraftingEmitterBlock() {
         super(Properties.ofFullCopy(Blocks.IRON_BLOCK).setId(ResourceKey.create(
@@ -42,10 +42,11 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
     }
 
     private static BlockEntityType<CraftingEmitterBlockEntity> craftingEmitterType() {
-        return RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get();
+        return RSRReforged.RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get();
     }
 
-    @Override protected void createBlockStateDefinition(StateDefinition.@NonNull Builder<Block, BlockState> builder) {
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.@NonNull Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(POWERED);
     }
@@ -53,48 +54,55 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
     public BlockEntityType.BlockEntitySupplier<CraftingEmitterBlockEntity> getTypedFactory() {
         return (blockPos, blockState)
                 -> new CraftingEmitterBlockEntity(
-                RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get(), blockPos, blockState);
+                RSRReforged.RSRRBlockEntities.CRAFTING_EMITTER_BE_TYPE.get(), blockPos, blockState);
     }
 
-    @Override public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
+    @Override
+    public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
             @NonNull Level level, @NonNull BlockState state, @NonNull BlockEntityType<R> entityType) {
         return TICKER.get(level, entityType);
     }
 
-    @Nullable public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
+    @Nullable
+    public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
         return getTypedFactory().create(pos, state);
     }
 
-    @Override public @NonNull VoxelShape getShape(
+    @Override
+    public @NonNull VoxelShape getShape(
             @NonNull BlockState state, @NonNull BlockGetter worldIn, @NonNull BlockPos pos,
             @NonNull CollisionContext context) {
         return SHAPE;
     }
 
-    @Override public boolean isSignalSource(@NonNull BlockState state) {
+    @Override
+    public boolean isSignalSource(@NonNull BlockState state) {
         return true;
     }
 
-    @Override public boolean canConnectRedstone(
+    @Override
+    public boolean canConnectRedstone(
             @NonNull BlockState state, @NonNull BlockGetter world, @NonNull BlockPos pos, @Nullable Direction side) {
         return true;
     }
 
-    @Override public int getDirectSignal(
+    @Override
+    public int getDirectSignal(
             @NonNull BlockState blockState, BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
         BlockEntity entity = blockAccess.getBlockEntity(pos);
-        if(entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
-            if(craftingEmitterBlockEntity.getShouldEmmitRedstone())
+        if (entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
+            if (craftingEmitterBlockEntity.getShouldEmmitRedstone())
                 return 15;
         }
         return 0;
     }
 
-    @Override public int getSignal(
+    @Override
+    public int getSignal(
             @NonNull BlockState blockState, BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
         BlockEntity entity = blockAccess.getBlockEntity(pos);
-        if(entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
-            if(craftingEmitterBlockEntity.getShouldEmmitRedstone())
+        if (entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
+            if (craftingEmitterBlockEntity.getShouldEmmitRedstone())
                 return 15;
         }
         return 0;

@@ -1,6 +1,6 @@
 package com.gotlicked.rsrreforged.block;
 
-import com.gotlicked.rsrreforged.block.entity.RSRRBlockEntities;
+import com.gotlicked.rsrreforged.RSRReforged;
 import com.gotlicked.rsrreforged.block.entity.RequesterBlockEntity;
 import com.refinedmods.refinedstorage.common.support.AbstractBaseBlock;
 import com.refinedmods.refinedstorage.common.support.AbstractBlockEntityTicker;
@@ -27,7 +27,7 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
     public static BooleanProperty CONNECTED = BooleanProperty.create("connected");
     private static final AbstractBlockEntityTicker<RequesterBlockEntity> TICKER =
             new NetworkNodeBlockEntityTicker<>(
-            RequesterBlock::requesterType, CONNECTED);
+                    RequesterBlock::requesterType, CONNECTED);
 
     public RequesterBlock() {
         super(Properties.ofFullCopy(Blocks.IRON_BLOCK).setId(ResourceKey.create(
@@ -38,10 +38,11 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
     }
 
     private static BlockEntityType<RequesterBlockEntity> requesterType() {
-        return RSRRBlockEntities.REQUESTER_BE_TYPE.get();
+        return RSRReforged.RSRRBlockEntities.REQUESTER_BE_TYPE.get();
     }
 
-    @Override protected void createBlockStateDefinition(StateDefinition.@NonNull Builder<Block, BlockState> builder) {
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.@NonNull Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         builder.add(CONNECTED);
     }
@@ -49,17 +50,19 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
     public BlockEntityType.BlockEntitySupplier<RequesterBlockEntity> getTypedFactory() {
         return (blockPos, blockState) ->
                 new RequesterBlockEntity(
-                RSRRBlockEntities.REQUESTER_BE_TYPE.get(), blockPos, blockState);
+                        RSRReforged.RSRRBlockEntities.REQUESTER_BE_TYPE.get(), blockPos, blockState);
     }
 
-    @Override public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
+    @Override
+    public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
             @NonNull Level level,
             @NonNull BlockState state,
             @NonNull BlockEntityType<R> entityType) {
         return TICKER.get(level, entityType);
     }
 
-    @Nullable public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
+    @Nullable
+    public BlockEntity newBlockEntity(@NonNull BlockPos pos, @NonNull BlockState state) {
         return getTypedFactory().create(pos, state);
     }
 

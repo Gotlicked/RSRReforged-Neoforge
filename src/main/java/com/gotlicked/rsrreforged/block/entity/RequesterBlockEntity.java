@@ -1,14 +1,17 @@
 package com.gotlicked.rsrreforged.block.entity;
 
-import com.gotlicked.rsrreforged.block.RSRRBlocks;
-import com.gotlicked.rsrreforged.block.entity.network.RequesterNetworkNode;
-import com.gotlicked.rsrreforged.common.container.RequesterContainer;
-import com.gotlicked.rsrreforged.common.data.RequesterData;
+import com.gotlicked.rsrreforged.RSRReforged;
+import com.gotlicked.rsrreforged.container.RequesterContainer;
+import com.refinedmods.refinedstorage.api.network.autocrafting.AutocraftingNetworkComponent;
+import com.refinedmods.refinedstorage.api.network.impl.autocrafting.TimeoutableCancellationToken;
+import com.refinedmods.refinedstorage.api.network.impl.node.SimpleNetworkNode;
 import com.refinedmods.refinedstorage.api.network.impl.node.iface.InterfaceTransferResult;
+import com.refinedmods.refinedstorage.api.network.storage.StorageNetworkComponent;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.common.api.support.network.InWorldNetworkNodeContainer;
 import com.refinedmods.refinedstorage.common.api.support.resource.ResourceContainer;
 import com.refinedmods.refinedstorage.common.api.upgrade.UpgradeDestination;
+import com.refinedmods.refinedstorage.common.content.Items;
 import com.refinedmods.refinedstorage.common.support.FilterWithFuzzyMode;
 import com.refinedmods.refinedstorage.common.support.containermenu.NetworkNodeExtendedMenuProvider;
 import com.refinedmods.refinedstorage.common.support.exportingindicator.ExportingIndicator;
@@ -21,6 +24,8 @@ import com.refinedmods.refinedstorage.common.upgrade.UpgradeContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.codec.StreamEncoder;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -34,26 +39,32 @@ import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.NonNull;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
-public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockEntity<RequesterNetworkNode>
-        implements NetworkNodeExtendedMenuProvider<RequesterData> {
+import static com.refinedmods.refinedstorage.common.util.PlatformUtil.enumStreamCodec;
 
-    private static final int EXPORT_SLOTS = 9;
-    public static UpgradeDestination REQUESTER_DESTINATION = new UpgradeDestination() {
-        @Override public @NonNull Component getName() {
+public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockEntity<RequesterBlockEntity.RequesterNetworkNode>
+        implements NetworkNodeExtendedMenuProvider<RequesterBlockEntity.RequesterData> {
+
+    public static final UpgradeDestination REQUESTER_DESTINATION = new UpgradeDestination() {
+        @Override
+        public @NonNull Component getName() {
             return Component.translatable("block.rsrreforged.requester");
         }
 
-        @Override public @NonNull ItemStack getStackRepresentation() {
-            return new ItemStack(RSRRBlocks.REQUESTER.get());
+        @Override
+        public @NonNull ItemStack getStackRepresentation() {
+            return new ItemStack(RSRReforged.RSRRBlocks.REQUESTER.get());
         }
     };
+    private static final int EXPORT_SLOTS = 9;
     private final FilterWithFuzzyMode filter;
     private final UpgradeContainer upgradeContainer;
 
     public RequesterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state,
-              new RequesterNetworkNode(16));
+                new RequesterNetworkNode(16));
         this.filter = FilterWithFuzzyMode.create(
                 createFilterContainer(),
                 this::setChanged);
@@ -72,7 +83,7 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
     public static ResourceContainer createFilterContainer(final RequesterData interfaceData) {
         final ResourceContainer filterContainer = createFilterContainer();
         final ResourceContainerData resourceContainerData = interfaceData.filterContainerData();
-        for(
+        for (
                 int i = 0; i < resourceContainerData.resources().size(); ++i) {
             final int ii = i;
             resourceContainerData.resources().get(i).ifPresent(
@@ -82,12 +93,15 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
         return filterContainer;
     }
 
-    @Override public void setLevel(@NonNull Level level) {
+    @Override
+    public void setLevel(@NonNull Level level) {
         super.setLevel(level);
         this.mainNetworkNode.setLevel(level);
     }
 
-    @Nullable @Override public AbstractContainerMenu createMenu(
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(
             final int syncId, final @NonNull Inventory inventory,
             final @NonNull Player player) {
         return new RequesterContainer(
@@ -96,13 +110,15 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
     }
 
 
-    @Override public @NonNull RequesterData getMenuData() {
+    @Override
+    public @NonNull RequesterData getMenuData() {
         return new RequesterData(
                 ResourceContainerData.of(filter.getFilterContainer()),
                 getExportingIndicators().getAll());
     }
 
-    @Override public @NonNull StreamEncoder<RegistryFriendlyByteBuf, RequesterData> getMenuCodec() {
+    @Override
+    public @NonNull StreamEncoder<RegistryFriendlyByteBuf, RequesterData> getMenuCodec() {
         return RequesterData.STREAM_CODEC;
     }
 
@@ -110,13 +126,13 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
     private ExportingIndicators getExportingIndicators() {
         return new ExportingIndicators(
                 filter.getFilterContainer(), i -> toExportingIndicator(
-                        mainNetworkNode.getLastResult(i)),
+                mainNetworkNode.getLastResult(i)),
                 true);
     }
 
     private ExportingIndicator toExportingIndicator(
             @Nullable final InterfaceTransferResult result) {
-        return switch(result) {
+        return switch (result) {
             case STORAGE_DOES_NOT_ACCEPT_RESOURCE -> ExportingIndicator.DESTINATION_DOES_NOT_ACCEPT_RESOURCE;
             case RESOURCE_MISSING -> ExportingIndicator.RESOURCE_MISSING;
             case AUTOCRAFTING_STARTED -> ExportingIndicator.AUTOCRAFTING_WAS_STARTED;
@@ -125,38 +141,121 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
         };
     }
 
-    @Override public @NonNull Component getName() {
+    @Override
+    public @NonNull Component getName() {
         return Component.translatable("block.rsrreforged.requester");
     }
 
-    @Override public boolean hasCustomName() {
+    @Override
+    public boolean hasCustomName() {
         return false;
     }
 
     @Override
     protected @NonNull InWorldNetworkNodeContainer createMainContainer(@NonNull RequesterNetworkNode networkNode) {
         return RefinedStorageApi.INSTANCE.createNetworkNodeContainer(
-                this, networkNode).connectionStrategy(
-                new SimpleConnectionStrategy(
-                getBlockPos()))
-        .build();
+                        this, networkNode).connectionStrategy(
+                        new SimpleConnectionStrategy(
+                                getBlockPos()))
+                .build();
     }
 
-    @Override public void saveAdditional(final @NonNull ValueOutput output) {
-        super.saveAdditional(output);
-    }
-
-    @Override public void loadAdditional(final @NonNull ValueInput input) {
-        super.loadAdditional(input);
-    }
-
-    @Override public void writeConfiguration(final @NonNull ValueOutput output) {
+    @Override
+    public void writeConfiguration(final @NonNull ValueOutput output) {
         super.writeConfiguration(output);
         filter.store(output);
     }
 
-    @Override public void readConfiguration(final @NonNull ValueInput input) {
+    @Override
+    public void readConfiguration(final @NonNull ValueInput input) {
         super.readConfiguration(input);
         filter.read(input);
+    }
+
+    public static class RequesterNetworkNode extends SimpleNetworkNode {
+
+        private FilterWithFuzzyMode filter;
+        private UpgradeContainer upgradeContainer;
+        private Level level;
+        private InterfaceTransferResult[] results;
+
+        public RequesterNetworkNode(long energyUsage) {
+            super(energyUsage);
+        }
+
+        public void setFilter(FilterWithFuzzyMode filter) {
+            this.filter = filter;
+            this.results = new InterfaceTransferResult[filter.getFilterContainer().size()];
+        }
+
+        public void setLevel(Level level) {
+            this.level = level;
+        }
+
+        public void setUpgradeContainer(UpgradeContainer upgradeContainer) {
+            this.upgradeContainer = upgradeContainer;
+        }
+
+        @Override
+        public void doWork() {
+            super.doWork();
+            if (network != null && isActive() && this.filter != null && this.level != null
+                    && this.level.getGameTime() % 10 == 0) {
+                var craftingComponent = network.getComponent(
+                        AutocraftingNetworkComponent.class);
+                var storageComponent = network.getComponent(
+                        StorageNetworkComponent.class);
+                for (
+                        int i = 0; i < this.filter.getFilterContainer().size(); i++) {
+                    try {
+                        var resource = this.filter.getFilterContainer().get(i);
+                        if (resource == null) {
+                            results[i] = InterfaceTransferResult.EXPORTED;
+                            continue;
+                        }
+                        var amount = resource.amount();
+                        var needed = amount - storageComponent.get(resource.resource());
+                        if (needed <= 0) {
+                            results[i] = InterfaceTransferResult.EXPORTED;
+                            continue;
+                        }
+                        var toRequestMaxAmount = 64 * (
+                                1 + 8 * this.upgradeContainer.getAmount(Items.INSTANCE.getStackUpgrade()));
+                        AutocraftingNetworkComponent.EnsureResult ensure = craftingComponent.ensureTask(
+                                resource.resource(), Math.min(needed, toRequestMaxAmount), () -> "Requester",
+                                new TimeoutableCancellationToken());
+                        if (ensure == AutocraftingNetworkComponent.EnsureResult.TASK_CREATED
+                                || ensure == AutocraftingNetworkComponent.EnsureResult.TASK_ALREADY_RUNNING) {
+                            results[i] = InterfaceTransferResult.AUTOCRAFTING_STARTED;
+                        } else if (ensure == AutocraftingNetworkComponent.EnsureResult.MISSING_RESOURCES) {
+                            results[i] = InterfaceTransferResult.AUTOCRAFTING_MISSING_RESOURCES;
+                        }
+                    } catch (IllegalStateException e) {
+                        RSRReforged.LOGGER.error("Failed to load resource {}", e);
+                        results[i] = InterfaceTransferResult.RESOURCE_MISSING;
+                    }
+                }
+            }
+        }
+
+        @Nullable
+        public InterfaceTransferResult getLastResult(final int slot) {
+            if (results == null) {
+                return null;
+            }
+            return results[slot];
+        }
+    }
+
+    public record RequesterData(
+            ResourceContainerData filterContainerData, List<ExportingIndicator> exportingIndicators) {
+        public static final StreamCodec<RegistryFriendlyByteBuf, RequesterData> STREAM_CODEC = StreamCodec.composite(
+                ResourceContainerData.STREAM_CODEC,
+                RequesterData::filterContainerData,
+                ByteBufCodecs.collection(
+                        ArrayList::new,
+                        enumStreamCodec(ExportingIndicator.values())),
+                RequesterData::exportingIndicators,
+                RequesterData::new);
     }
 }
