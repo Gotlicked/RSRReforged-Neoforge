@@ -24,7 +24,7 @@ import org.jspecify.annotations.NonNull;
 
 public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
 
-    public static BooleanProperty CONNECTED = BooleanProperty.create("connected");
+    public static final BooleanProperty CONNECTED = BooleanProperty.create("connected");
     private static final AbstractBlockEntityTicker<RequesterBlockEntity> TICKER =
             new NetworkNodeBlockEntityTicker<>(
                     RequesterBlock::requesterType, CONNECTED);
@@ -54,7 +54,7 @@ public class RequesterBlock extends AbstractBaseBlock implements EntityBlock {
     }
 
     @Override
-    public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
+    public <R extends BlockEntity> BlockEntityTicker<@NonNull R> getTicker(
             @NonNull Level level,
             @NonNull BlockState state,
             @NonNull BlockEntityType<R> entityType) {

@@ -7,6 +7,7 @@ import com.refinedmods.refinedstorage.api.autocrafting.status.TaskStatus;
 import com.refinedmods.refinedstorage.api.network.autocrafting.AutocraftingNetworkComponent;
 import com.refinedmods.refinedstorage.api.network.impl.node.SimpleNetworkNode;
 import com.refinedmods.refinedstorage.api.network.impl.node.iface.InterfaceTransferResult;
+import com.refinedmods.refinedstorage.api.resource.ResourceAmount;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.common.api.support.network.InWorldNetworkNodeContainer;
 import com.refinedmods.refinedstorage.common.api.support.resource.ResourceContainer;
@@ -32,6 +33,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NonNull;
 
 import javax.annotation.Nullable;
@@ -198,38 +200,49 @@ public class CraftingEmitterBlockEntity extends AbstractBaseNetworkNodeContainer
         @Override
         public void doWork() {
             super.doWork();
-            if (network != null && isActive() && this.filter != null && this.level != null
-                    && this.level.getGameTime() % 20 == 0) {
-                var craftingComponent = network.getComponent(
-                        AutocraftingNetworkComponent.class);
-                for (
-                        int i = 0; i < this.filter.getFilterContainer().size(); i++) {
-                    try {
-                        var resource = this.filter.getFilterContainer().get(i);
-                        if (resource == null) {
-                            results[i] = InterfaceTransferResult.EXPORTED;
-                            continue;
-                        }
-                        var patterns = craftingComponent.getPatternsByOutput(
-                                resource.resource());
-                        for (var pattern : patterns) {
-                            var patterProvider = craftingComponent.getProviderByPattern(pattern);
-                            assert patterProvider != null;
-                            for (TaskStatus taskStatus : patterProvider.getTaskStatuses()) {
-                                if (taskStatus.info().resource().equals(resource.resource())
-                                        && taskStatus.info().amount() >= resource.amount()) {
-                                    this.shouldEmmitRedstone.accept(true);
-                                    return;
-                                }
-                            }
-                        }
-                    } catch (IllegalStateException e) {
-                        RSRReforged.LOGGER.error("Failed to load resource {}", e);
-                        results[i] = InterfaceTransferResult.RESOURCE_MISSING;
+            if (network == null || !isActive() || this.filter == null || this.level == null
+                    || this.level.getGameTime() % 20 != 0) {
+                return;
+            }
+            var craftingComponent = network.getComponent(AutocraftingNetworkComponent.class);
+            boolean shouldEmit = checkShouldEmit(craftingComponent);
+            this.shouldEmmitRedstone.accept(shouldEmit);
+        }
+
+        private boolean checkShouldEmit(AutocraftingNetworkComponent craftingComponent) {
+            for (int i = 0; i < this.filter.getFilterContainer().size(); i++) {
+                try {
+                    var resource = this.filter.getFilterContainer().get(i);
+                    if (resource == null) {
+                        results[i] = InterfaceTransferResult.EXPORTED;
+                        continue;
+                    }
+                    if (isTaskRunningForResource(craftingComponent, resource)) {
+                        return true;
+                    }
+                } catch (IllegalStateException e) {
+                    RSRReforged.LOGGER.error("Failed to load resource: {}", e.getMessage(), e);
+                    results[i] = InterfaceTransferResult.RESOURCE_MISSING;
+                }
+            }
+            return false;
+        }
+
+        private boolean isTaskRunningForResource(
+                AutocraftingNetworkComponent craftingComponent,
+                @UnknownNullability ResourceAmount resource) {
+            var patterns = craftingComponent.getPatternsByOutput(resource.resource());
+            for (var pattern : patterns) {
+                var patternProvider = craftingComponent.getProviderByPattern(pattern);
+                if (patternProvider == null) continue;
+                for (TaskStatus taskStatus : patternProvider.getTaskStatuses()) {
+                    if (taskStatus.info().resource().equals(resource.resource())
+                            && taskStatus.info().amount() >= resource.amount()) {
+                        return true;
                     }
                 }
-                this.shouldEmmitRedstone.accept(false);
             }
+            return false;
         }
 
         @Nullable

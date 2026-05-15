@@ -41,6 +41,7 @@ import org.jspecify.annotations.NonNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.refinedmods.refinedstorage.common.util.PlatformUtil.enumStreamCodec;
 
@@ -199,43 +200,48 @@ public class RequesterBlockEntity extends AbstractBaseNetworkNodeContainerBlockE
         @Override
         public void doWork() {
             super.doWork();
-            if (network != null && isActive() && this.filter != null && this.level != null
-                    && this.level.getGameTime() % 10 == 0) {
-                var craftingComponent = network.getComponent(
-                        AutocraftingNetworkComponent.class);
-                var storageComponent = network.getComponent(
-                        StorageNetworkComponent.class);
-                for (
-                        int i = 0; i < this.filter.getFilterContainer().size(); i++) {
-                    try {
-                        var resource = this.filter.getFilterContainer().get(i);
-                        if (resource == null) {
-                            results[i] = InterfaceTransferResult.EXPORTED;
-                            continue;
-                        }
-                        var amount = resource.amount();
-                        var needed = amount - storageComponent.get(resource.resource());
-                        if (needed <= 0) {
-                            results[i] = InterfaceTransferResult.EXPORTED;
-                            continue;
-                        }
-                        var toRequestMaxAmount = 64 * (
-                                1 + 8 * this.upgradeContainer.getAmount(Items.INSTANCE.getStackUpgrade()));
-                        AutocraftingNetworkComponent.EnsureResult ensure = craftingComponent.ensureTask(
-                                resource.resource(), Math.min(needed, toRequestMaxAmount), () -> "Requester",
-                                new TimeoutableCancellationToken());
-                        if (ensure == AutocraftingNetworkComponent.EnsureResult.TASK_CREATED
-                                || ensure == AutocraftingNetworkComponent.EnsureResult.TASK_ALREADY_RUNNING) {
-                            results[i] = InterfaceTransferResult.AUTOCRAFTING_STARTED;
-                        } else if (ensure == AutocraftingNetworkComponent.EnsureResult.MISSING_RESOURCES) {
-                            results[i] = InterfaceTransferResult.AUTOCRAFTING_MISSING_RESOURCES;
-                        }
-                    } catch (IllegalStateException e) {
-                        RSRReforged.LOGGER.error("Failed to load resource {}", e);
-                        results[i] = InterfaceTransferResult.RESOURCE_MISSING;
-                    }
-                }
+            if (network == null || !isActive() || this.filter == null || this.level == null
+                    || this.level.getGameTime() % 10 != 0) {
+                return;
             }
+            var craftingComponent = network.getComponent(AutocraftingNetworkComponent.class);
+            var storageComponent = network.getComponent(StorageNetworkComponent.class);
+            IntStream.range(0, this.filter.getFilterContainer().size())
+                    .forEach(i -> processSlot(i, craftingComponent, storageComponent));
+        }
+
+        private void processSlot(int i, AutocraftingNetworkComponent craftingComponent,
+                                 StorageNetworkComponent storageComponent) {
+            try {
+                var resource = this.filter.getFilterContainer().get(i);
+                if (resource == null) {
+                    results[i] = InterfaceTransferResult.EXPORTED;
+                    return;
+                }
+                long needed = resource.amount() - storageComponent.get(resource.resource());
+                if (needed <= 0) {
+                    results[i] = InterfaceTransferResult.EXPORTED;
+                    return;
+                }
+                long toRequestMaxAmount = 64L * (1 + 8L * this.upgradeContainer.getAmount(
+                        Items.INSTANCE.getStackUpgrade()));
+                results[i] = resolveEnsureResult(
+                        craftingComponent.ensureTask(resource.resource(),
+                                Math.min(needed, toRequestMaxAmount),
+                                () -> "Requester",
+                                new TimeoutableCancellationToken()));
+            } catch (IllegalStateException e) {
+                RSRReforged.LOGGER.error("Failed to load resource: {}", e.getMessage(), e);
+                results[i] = InterfaceTransferResult.RESOURCE_MISSING;
+            }
+        }
+
+        private InterfaceTransferResult resolveEnsureResult(
+                AutocraftingNetworkComponent.EnsureResult ensure) {
+            return switch (ensure) {
+                case TASK_CREATED, TASK_ALREADY_RUNNING -> InterfaceTransferResult.AUTOCRAFTING_STARTED;
+                case MISSING_RESOURCES -> InterfaceTransferResult.AUTOCRAFTING_MISSING_RESOURCES;
+            };
         }
 
         @Nullable

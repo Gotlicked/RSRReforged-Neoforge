@@ -58,7 +58,7 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
     }
 
     @Override
-    public @Nullable <R extends BlockEntity> BlockEntityTicker<R> getTicker(
+    public <R extends BlockEntity> BlockEntityTicker<@NonNull R> getTicker(
             @NonNull Level level, @NonNull BlockState state, @NonNull BlockEntityType<R> entityType) {
         return TICKER.get(level, entityType);
     }
@@ -86,25 +86,23 @@ public class CraftingEmitterBlock extends AbstractBaseBlock implements EntityBlo
         return true;
     }
 
-    @Override
-    public int getDirectSignal(
-            @NonNull BlockState blockState, BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
+    private int getRedstoneSignal(BlockGetter blockAccess, BlockPos pos) {
         BlockEntity entity = blockAccess.getBlockEntity(pos);
-        if (entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
-            if (craftingEmitterBlockEntity.getShouldEmmitRedstone())
-                return 15;
+        if (entity instanceof CraftingEmitterBlockEntity ce && ce.getShouldEmmitRedstone()) {
+            return 15;
         }
         return 0;
     }
 
     @Override
+    public int getDirectSignal(
+            @NonNull BlockState blockState, @NonNull BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
+        return getRedstoneSignal(blockAccess, pos);
+    }
+
+    @Override
     public int getSignal(
-            @NonNull BlockState blockState, BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
-        BlockEntity entity = blockAccess.getBlockEntity(pos);
-        if (entity instanceof CraftingEmitterBlockEntity craftingEmitterBlockEntity) {
-            if (craftingEmitterBlockEntity.getShouldEmmitRedstone())
-                return 15;
-        }
-        return 0;
+            @NonNull BlockState blockState, @NonNull BlockGetter blockAccess, @NonNull BlockPos pos, @NonNull Direction side) {
+        return getRedstoneSignal(blockAccess, pos);
     }
 }
